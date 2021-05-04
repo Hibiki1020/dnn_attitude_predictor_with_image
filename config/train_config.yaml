@@ -9,9 +9,9 @@ valid:
   - "/Neighborhood_1000samples"
 csv_name: "imu_camera.csv"
 
-weights_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/weights/regression/"
-log_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/log/"
-graph_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/graph/"
+weights_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/weights/regression/"
+log_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/log/"
+graph_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/graph/"
 
 hyperparameter:
   resize: 224

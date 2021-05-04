@@ -9,10 +9,10 @@ valid:
   - "/dkan_outdoor"
 csv_name: "imu_camera.csv"
 
-weights_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/weights/fine_tune/"
-pretrained_model_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/weights/regression/regression11000train1000valid224resize0.5mean0.5stdAdam1e-05lrcnn0.0001lrfc100batch110epoch.pth"
-log_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/log/"
-graph_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/graph/"
+weights_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/weights/fine_tune/"
+pretrained_model_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/weights/regression/regression11000train1000valid224resize0.5mean0.5stdAdam1e-05lrcnn0.0001lrfc100batch110epoch.pth"
+log_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/log/"
+graph_path: "/home/dnn_attitude_predictor_with_image/20210504_1300/graph/"
 
 hyperparameter:
   resize: 224
