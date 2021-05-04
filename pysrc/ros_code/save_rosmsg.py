@@ -28,7 +28,7 @@ import sys
 #Need in running in ROS
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append('../')
-from common import bnn_network
+from common import dnn_network
 
 class SaveROSMsg:
 

@@ -16,7 +16,7 @@ from torchvision import transforms
 
 import sys
 sys.path.append('../')
-from common import bnn_network
+from common import dnn_network
 
 class FrameInferEval:
     def __init__(self,CFG):
@@ -68,7 +68,7 @@ class FrameInferEval:
         
         for row_log, row_dataset in loop_bar:
             #pic_path = os.path.join(dataset_data_top_path, row_log[5])
-            log_pic = cv2.imread(row_log[5])
+            log_pic = cv2.imread(row_log[3])
             
             log_x = float(row_log[0])
             log_y = float(row_log[1])
@@ -89,13 +89,11 @@ class FrameInferEval:
             diff_y = abs(float(log_y) - float(data_y))
             diff_z = abs(float(log_z) - float(data_z))
 
-            tmp_bookmark_list = [row_log[5], log_x, log_y, log_z, diff_x, diff_y, diff_z, log_var, log_epistemic]
+            tmp_bookmark_list = [row_log[3], log_x, log_y, log_z, diff_x, diff_y, diff_z]
 
             print("diff_x   : ", diff_x)
             print("diff_y   : ", diff_y)
             print("diff_z   : ", diff_z)
-            print("epistemic: ",log_epistemic)
-            print("Variance : ", log_var)
             
             print("Do you want to save this picture's data? answer in y/n .")
             print("If you want to exit, press q key")
@@ -130,7 +128,7 @@ if __name__ == '__main__':
         '--eval_frame_infer_config', '-efic',
         type=str,
         required=False,
-        default='/home/ros_catkin_ws/src/bnn_attitude_predictor_with_image/config/eval_frame_infer_config.yaml',
+        default='/home/ros_catkin_ws/src/dnn_attitude_predictor_with_image/config/eval_frame_infer_config.yaml',
         help='Eval frame infer config yaml file',
     )
 

@@ -1,7 +1,7 @@
-frame_infer_log_top_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/infer_log/frame_infer"
+frame_infer_log_top_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/infer_log/frame_infer"
 frame_infer_log_file_name: "frame_infer_result.csv"
 
-saved_log_csv_top_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/infer_log/eval_frame_infer"
+saved_log_csv_top_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/infer_log/eval_frame_infer"
 saved_log_csv_file_name: "eval_result.csv"
 
 dataset_data_top_path: "/home/ssd_dir/dataset_image_to_gravity_ozaki/stick/1cam/20210420_143420/"

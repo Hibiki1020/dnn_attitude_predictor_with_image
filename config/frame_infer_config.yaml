@@ -3,10 +3,10 @@ method_name: "frame_infer"
 dataset_frame_path: "/home/ssd_dir/dataset_image_to_gravity_ozaki/stick/1cam/20210420_143420"
 csv_name: "imu_camera.csv"
 
-weights_top_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/weights/fine_tune/"
+weights_top_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/weights/fine_tune/"
 weights_file_name: "regression1108train857valid224resize0.5mean0.5stdAdam1e-05lrcnn0.0001lrfc50batch50epoch.pth"
 
-log_file_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/infer_log/frame_infer"
+log_file_path: "/home/dnn_attitude_predictor_with_image/2021_0503_fine_tune/infer_log/frame_infer"
 log_file_name: "frame_infer_result.csv"
 
 frame_id: "base_link"

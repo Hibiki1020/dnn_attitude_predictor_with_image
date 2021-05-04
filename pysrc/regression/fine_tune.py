@@ -24,7 +24,7 @@ from common import trainer_mod
 from common import make_datalist_mod
 from common import data_transform_mod
 from common import dataset_mod
-from common import bnn_network
+from common import dnn_network
 
 #Fine Tune Class
 class FineTuner(trainer_mod.Trainer):
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         '--train_cfg', '-c',
         type=str,
         required=False,
-        default='/home/ros_catkin_ws/src/bnn_attitude_predictor_with_image/config/fine_tune_config.yaml',
+        default='/home/ros_catkin_ws/src/dnn_attitude_predictor_with_image/config/fine_tune_config.yaml',
         help='Train hyperparameter config file',
     )
 
@@ -181,7 +181,7 @@ if __name__ == '__main__':
 
     ##Network
     #use_pretrained_vgg -> False
-    net = bnn_network.Network(resize, dim_fc_out=3, dropout_rate=0.1, use_pretrained_vgg=False)
+    net = dnn_network.Network(resize, dim_fc_out=3, dropout_rate=0.1, use_pretrained_vgg=False)
 
 
     ##Criterion

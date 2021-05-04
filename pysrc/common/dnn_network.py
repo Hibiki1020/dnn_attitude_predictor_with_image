@@ -14,33 +14,13 @@ class Network(nn.Module):
 
         dim_fc_in = 512*(resize//32)*(resize//32)
         self.fc = nn.Sequential(
-            #Layer1
-            nn.Linear(dim_fc_in, 256),
+            nn.Linear(dim_fc_in, 100),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-
-            #layer2
-            nn.Linear(256, 128),
+            nn.Dropout(p=0.1),
+            nn.Linear(100, 18),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-
-            #Layer3
-            nn.Linear(128, 64),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-
-            #Layer4
-            nn.Linear(64, 32),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-            
-            #Layer5
-            nn.Linear(32, 16),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-
-            #Final Layer
-            nn.Linear(16, dim_fc_out)
+            nn.Dropout(p=0.1),
+            nn.Linear(18, dim_fc_out)
         )
 
     def getParamValueList(self):

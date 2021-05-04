@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/opt/ros/noetic/include/**",
+        "/home/amsl/catkin_ws/src/bnn_attitude_predictor_with_image/include/**",
+        "/home/amsl/catkin_ws/src/bonnet/deploy_cpp/src/lib/include/**",
+        "/home/amsl/catkin_ws/src/bonnet/deploy_cpp/src/ros/include/**",
+        "/home/amsl/catkin_ws/src/dnn_attitude_predictor_with_image/include/**",
+        "/home/amsl/catkin_ws/src/semantic_mesh_loam/include/**",
+        "/home/amsl/catkin_ws/src/semantic_mesh_localization/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}

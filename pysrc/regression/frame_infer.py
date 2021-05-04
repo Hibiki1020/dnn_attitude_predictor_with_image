@@ -16,11 +16,11 @@ from torchvision import transforms
 
 import sys
 sys.path.append('../')
-from common import bnn_network
+from common import dnn_network
 
-class BnnAttitudeEstimationWithImageFrame:
+class DnnAttitudeEstimationWithImageFrame:
     def __init__(self, CFG):
-        print("BNNAttitudeEstimationWithImageFrame")
+        print("DNNAttitudeEstimationWithImageFrame")
         
         self.CFG = CFG
         #contain yaml data to variance
@@ -59,18 +59,16 @@ class BnnAttitudeEstimationWithImageFrame:
         #self.bridge = CvBridge()
         self.color_img_cv = np.empty(0)
 
-        #BNN
+        #DNN
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print("self.device ==> ", self.device)
 
         self.img_transform = self.getImageTransform(self.resize, self.mean_element, self.std_element)
         self.net = self.getNetwork(self.resize, self.weights_path, self.dropout_rate)
-        
-        self.enable_do = self.enable_dropout()
 
     def getNetwork(self, resize, weights_path, dropout_rate):
         #VGG16を使用した場合
-        net = bnn_network.Network(resize, dim_fc_out=3, dropout_rate=dropout_rate, use_pretrained_vgg=False)
+        net = dnn_network.Network(resize, dim_fc_out=3, dropout_rate=dropout_rate, use_pretrained_vgg=False)
         print(net)
 
         net.to(self.device)
@@ -113,22 +111,7 @@ class BnnAttitudeEstimationWithImageFrame:
     def spin(self):
         data_list = self.get_image_data() #CSVファイル内の画像ファイル名を絶対パスに
         result_csv = self.frame_infer(data_list)
-        self.ave_epistemic = self.get_ave_epistemic(self.mean_epistemic)
         self.save_csv(result_csv, data_list)
-
-    def get_ave_epistemic(self, mean_epistemic):
-        ave = 0.0
-        var = 0.0
-
-        var_row = np.array(mean_epistemic)
-
-        ave = np.array(mean_epistemic).mean(0)
-        var = np.var(var_row)
-
-        print("mean:",ave)
-        print("var :",var)
-
-        return ave
 
     def normalize(self, v):
         l2 = np.linalg.norm(v, ord=2, axis=-1, keepdims=True)
@@ -151,22 +134,11 @@ class BnnAttitudeEstimationWithImageFrame:
             print("---------------------")
 
             start_clock = time.time()
-            list_outputs_tmp = np.array( self.bnnPrediction() )
-            output_inference_tmp = np.array( self.bnnPrediction_Once() )
+            output_inference_tmp = np.array( self.DNNPrediction() )
 
             output_inference = self.normalize(output_inference_tmp)
-            list_outputs = []
-
-            for output in list_outputs_tmp:
-                tmp_norm = self.normalize(output)
-                list_outputs.append(tmp_norm)
                 
             print("Period [s]: ", time.time() - start_clock)
-
-            expected_value, var_inf = self.calc_excepted_value_and_variance(list_outputs)
-            epistemic = self.calc_epistemic(output_inference, expected_value, var_inf)
-            print("Variance : ", var_inf)
-            print("Epistemic: ", epistemic)
             print("---------------------")
 
             print("\n")
@@ -174,7 +146,7 @@ class BnnAttitudeEstimationWithImageFrame:
 
 
             #x, y, z, var, epistemic, image_file_name
-            tmp_result = [output_inference[0], output_inference[1], output_inference[2], var_inf, epistemic, row[3]]
+            tmp_result = [output_inference[0], output_inference[1], output_inference[2], row[3]]
 
             result_csv.append(tmp_result)
 
@@ -191,24 +163,13 @@ class BnnAttitudeEstimationWithImageFrame:
 
         csv_file.close()
 
-    def bnnPrediction_Once(self):
+    def DNNPrediction(self):
         inputs_color = self.transformImage()
         print("inputs_color.size() = ", inputs_color.size())
         output_inf = self.net(inputs_color)
         output = output_inf.cpu().detach().numpy()[0]
 
         return output
-
-    def bnnPrediction(self):
-        ##Inference##
-        inputs_color = self.transformImage()
-        print("inputs_color.size() = ", inputs_color.size())
-        list_outputs = []
-        for _ in range(self.num_mcsampling): #MCサンプリングの回数だけ推論する
-            outputs = self.net(inputs_color) #do inference
-            list_outputs.append(outputs.cpu().detach().numpy()[0])
-
-        return list_outputs
 
     def transformImage(self):
         ## color
@@ -222,32 +183,6 @@ class BnnAttitudeEstimationWithImageFrame:
         img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(img_cv)
         return img_pil
-
-    def calc_excepted_value_and_variance(self, list_outputs):
-        mean = np.array(list_outputs).mean(0)
-        var = np.var(list_outputs, axis=(0,1))
-        #var = np.var(list_outputs, axis=(0))
-
-        return mean, var
-
-    def calc_epistemic(self, output_inference, expected_value, var_inf):
-        #See formulation (4) in Yarin Gal's paper: What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision
-        out_inf = np.array(output_inference)
-        out_inf = self.normalize(out_inf)
-
-        exp_val = np.array(expected_value)
-        exp_val = self.normalize(exp_val)
-
-        #epistemic = var_inf + output_inference.T * output_inference + expected_value.T * expected_value
-        print("var_inf = ", var_inf)
-        print("out_inf = ",out_inf)
-        print("exp_val = ", exp_val)
-        relation = np.array(out_inf - exp_val)
-        #epistemic = var_inf + np.dot(out_inf.T, out_inf) - np.dot(exp_val.T, exp_val)
-        epistemic = var_inf + np.dot(relation.T, relation) * 5 # 5 is hyper parameter
-
-        self.mean_epistemic.append(epistemic)
-        return epistemic
 
     def get_image_data(self):
         image_address_list = []
@@ -270,7 +205,7 @@ if __name__ == '__main__':
         '--frame_infer_config', '-fic',
         type=str,
         required=False,
-        default='/home/ros_catkin_ws/src/bnn_attitude_predictor_with_image/config/frame_infer_config.yaml',
+        default='/home/ros_catkin_ws/src/dnn_attitude_predictor_with_image/config/frame_infer_config.yaml',
         help='Frame infer config yaml file',
     )
 
@@ -285,7 +220,7 @@ if __name__ == '__main__':
         print("Error opening frame infer config file %s", FLAGS.frame_infer_config)
         quit()
 
-    bnn_attitude_predictor_with_image_frame = BnnAttitudeEstimationWithImageFrame(CFG)
+    dnn_attitude_predictor_with_image_frame = DnnAttitudeEstimationWithImageFrame(CFG)
     
     #Get image data and do inference
-    bnn_attitude_predictor_with_image_frame.spin()
+    dnn_attitude_predictor_with_image_frame.spin()

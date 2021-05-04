@@ -24,7 +24,7 @@ from common import trainer_mod
 from common import make_datalist_mod
 from common import data_transform_mod
 from common import dataset_mod
-from common import bnn_network
+from common import dnn_network
 
 
 if __name__ == '__main__':
@@ -35,7 +35,7 @@ if __name__ == '__main__':
         '--train_cfg', '-c',
         type=str,
         required=False,
-        default='/home/ros_catkin_ws/src/bnn_attitude_predictor_with_image/config/train_config.yaml',
+        default='/home/ros_catkin_ws/src/dnn_attitude_predictor_with_image/config/train_config.yaml',
         help='Train hyperparameter config file',
     )
 
@@ -117,8 +117,7 @@ if __name__ == '__main__':
     )
 
     ##Network
-    #net = bnn_network.Network(resize, list_dim_fc_out=[100, 18, 3], dropout_rate=0.1, use_pretrained_vgg=True)
-    net = bnn_network.Network(resize, dim_fc_out=3, dropout_rate=0.1, use_pretrained_vgg=True)
+    net = dnn_network.Network(resize, dim_fc_out=3, dropout_rate=0.1, use_pretrained_vgg=True)
 
 
     ##Criterion

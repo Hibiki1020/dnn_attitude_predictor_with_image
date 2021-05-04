@@ -26,19 +26,19 @@ import sys
 #Need in running in ROS
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append('../')
-from common import bnn_network
+from common import dnn_network
 
-class BnnAttitudeEstimationWithImage:
+class DnnAttitudeEstimationWithImage:
 
     def __init__(self):
-        print("BNN attitude estimation with camera image")
+        print("DNN attitude estimation with camera image")
 
         #Parameter of ROS
         self.frame_id = rospy.get_param('~frame_id', '/base_link')
         print("self.frame_id ==> ", self.frame_id)
 
-        #Parameters of BNN
-        weights_path = rospy.get_param('~weights_path', '/home/bnn_attitude_predictor_with_image/test2/weights/regression1775train318valid224resize0.5mean0.5stdAdam1e-05lrcnn0.0001lrfc70batch50epoch.pth')
+        #Parameters of DNN
+        weights_path = rospy.get_param('~weights_path', '/home/dnn_attitude_predictor_with_image/test2/weights/regression1775train318valid224resize0.5mean0.5stdAdam1e-05lrcnn0.0001lrfc70batch50epoch.pth')
         print("weights_path  ==> ", weights_path)
 
         resize = rospy.get_param('~resize')
@@ -62,9 +62,9 @@ class BnnAttitudeEstimationWithImage:
         self.sub_color_img = rospy.Subscriber( self.subscribe_topic_name, ImageMsg, self.callbackColorImage, queue_size=1, buff_size=2**24)
 
         #ROS publisher
-        self.pub_vector = rospy.Publisher("/bnn/g_vector", Vector3Stamped, queue_size=1)
-        self.pub_accel = rospy.Publisher("/bnn/g_vector_with_cov", Imu, queue_size=1)
-        self.pub_epistemic = rospy.Publisher("/bnn/epistemic_uncertain", Float32 , queue_size=1)
+        self.pub_vector = rospy.Publisher("/dnn/g_vector", Vector3Stamped, queue_size=1)
+        self.pub_accel = rospy.Publisher("/dnn/g_vector_with_cov", Imu, queue_size=1)
+        self.pub_epistemic = rospy.Publisher("/dnn/epistemic_uncertain", Float32 , queue_size=1)
 
         #msg
         self.v_msg = Vector3Stamped()
@@ -72,20 +72,19 @@ class BnnAttitudeEstimationWithImage:
 
         self.epistemic = 0.0 #Initial Value
         
-        #BNN internal parameter
+        #DNN internal parameter
         self.expected_value = Vector3Stamped() # expected_value => gravity vector
 
         #OpenCV
         self.bridge = CvBridge()
         self.color_img_cv = np.empty(0)
 
-        #BNN
+        #DNN
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print("self.device ==> ", self.device)
 
         self.img_transform = self.getImageTransform(resize, mean_element, std_element)
         self.net = self.getNetwork(resize, weights_path, self.dropout_rate)
-        self.enable_dropout()
 
     def getImageTransform(self, resize, mean_element, std_element):
         mean = ([mean_element, mean_element, mean_element])
@@ -102,7 +101,7 @@ class BnnAttitudeEstimationWithImage:
 
     def getNetwork(self, resize, weights_path, dropout_rate):
         #VGG16を使用した場合
-        net = bnn_network.Network(resize, dim_fc_out=3, dropout_rate=dropout_rate, use_pretrained_vgg=False)
+        net = dnn_network.Network(resize, dim_fc_out=3, dropout_rate=dropout_rate, use_pretrained_vgg=False)
         print(net)
 
         net.to(self.device)
@@ -119,12 +118,6 @@ class BnnAttitudeEstimationWithImage:
         #nn.load_state_dict(loaded_weights)
         net.load_state_dict(loaded_weights)
         return net
-    
-    def enable_dropout(self):
-        #enable dropout when inference
-        for module in self.net.modules():
-            if module.__class__.__name__.startswith('Dropout'):
-                module.train()
 
     def callbackColorImage(self, msg):
         try:
@@ -134,20 +127,12 @@ class BnnAttitudeEstimationWithImage:
 
             print("---------------------")
             start_clock = rospy.get_time()
-            list_outputs = self.bnnPrediction()
-            output_inference = self.bnnPrediction_Once()
+            output_inference = self.DNNPrediction()
             print("Period [s]: ", rospy.get_time() - start_clock)
-
-            self.expected_value, var_inf = self.calc_excepted_value_and_variance(list_outputs)
-            self.epistemic = self.calc_epistemic(output_inference, self.expected_value, var_inf)
-            print("Variance : ", var_inf)
-            print("Epistemic: ", self.epistemic)
             print("---------------------")
 
             print("\n")
             print("\n")
-
-
 
             self.InputToMsg(output_inference, list_outputs)
             self.publication(msg.header.stamp)
@@ -168,36 +153,13 @@ class BnnAttitudeEstimationWithImage:
         img_pil = Image.fromarray(img_cv)
         return img_pil
 
-
-    def calc_excepted_value_and_variance(self, list_outputs):
-        mean = np.array(list_outputs).mean(0)
-        var = np.var(list_outputs, axis=(0,1))
-
-        return mean, var
-
     def normalize(self, v):
         l2 = np.linalg.norm(v, ord=2, axis=-1, keepdims=True)
         l2[l2==0] = 1
         return v/l2
     
-    def calc_epistemic(self, output_inference, expected_value, var_inf):
-        #See formulation (4) in Yarin Gal's paper: What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision
-        out_inf = np.array(output_inference)
-        out_inf = self.normalize(out_inf)
 
-        exp_val = np.array(expected_value)
-        exp_val = self.normalize(exp_val)
-
-        print("var_inf = ", var_inf)
-        print("out_inf = ",out_inf)
-        print("exp_val = ", exp_val)
-        relation = np.array(out_inf - exp_val)
-
-        #epistemic = var_inf + output_inference.T * output_inference + expected_value.T * expected_value
-        epistemic = var_inf + np.dot(relation.T, relation)
-        return epistemic
-
-    def bnnPrediction_Once(self):
+    def DNNPrediction(self):
         inputs_color = self.transformImage()
         print("inputs_color.size() = ", inputs_color.size())
         output_inf = self.net(inputs_color)
@@ -205,26 +167,7 @@ class BnnAttitudeEstimationWithImage:
 
         return output
 
-    def bnnPrediction(self):
-        ##Inference##
-        inputs_color = self.transformImage()
-        print("inputs_color.size() = ", inputs_color.size())
-        list_outputs = []
-        for _ in range(self.num_mcsampling): #MCサンプリングの回数だけ推論する
-            outputs = self.net(inputs_color) #do inference
-            list_outputs.append(outputs.cpu().detach().numpy()[0])
-
-        return list_outputs
-
-    def getCovMatrix(self, outputs):
-        cov = np.cov(outputs, rowvar=False, bias=True)
-        return cov
-
-    def InputToMsg(self, output_inference, list_outputs):
-        tmp_list_outputs = list_outputs
-        tmp_list_outputs.append(output_inference)
-
-        cov = self.getCovMatrix(tmp_list_outputs)
+    def InputToMsg(self, output_inference):
         
         #Vector3Stamped
         self.v_msg.vector.x = -output_inference[0]
@@ -235,8 +178,6 @@ class BnnAttitudeEstimationWithImage:
         self.accel_msg.linear_acceleration.x = -output_inference[0]
         self.accel_msg.linear_acceleration.y = -output_inference[1]
         self.accel_msg.linear_acceleration.z = -output_inference[2]
-        for i in range(cov.size):
-            self.accel_msg.linear_acceleration_covariance[i] = cov[i//3, i%3]
 
     def InputNanToImuMsg(self, imu):
         imu.orientation.x = math.nan
@@ -274,7 +215,7 @@ def main():
     #Set ip ROS node
     rospy.init_node('ros_infer', anonymous=True)
 
-    bnn_attitude_estimation_with_image = BnnAttitudeEstimationWithImage()
+    dnn_attitude_estimation_with_image = dnnAttitudeEstimationWithImage()
 
     rospy.spin()
 
