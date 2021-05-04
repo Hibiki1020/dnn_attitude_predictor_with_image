@@ -1,0 +1,25 @@
+method_name: "regression"
+dataset_top_path: "/home/ssd_dir/dataset_image_to_gravity_ozaki"
+experiment_type: "/AirSim"
+image_env: "/1cam"
+train: #set sequence
+  - "/Neighborhood_10000samples"
+  - "/Neighborhood_40deg_1000samples"
+valid:
+  - "/Neighborhood_1000samples"
+csv_name: "imu_camera.csv"
+
+weights_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/weights/regression/"
+log_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/log/"
+graph_path: "/home/bnn_attitude_predictor_with_image/2021_0503_fine_tune/graph/"
+
+hyperparameter:
+  resize: 224
+  mean_element: 0.5
+  std_element: 0.5
+  hor_fov_deg: 70
+  optimizer_name: "Adam"
+  lr_cnn: 1e-5
+  lr_fc: 1e-4
+  batch_size: 100
+  num_epochs: 110
